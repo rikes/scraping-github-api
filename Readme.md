@@ -11,3 +11,4 @@ Local build requirements:
 #### Heroku
 To use Heroku, the url of the desired repository must be passed by parameter. Ex.:
 
+https://scraping-github-api.herokuapp.com/api/files?url=https://github.com/rikes/DataMiningCAGED/
