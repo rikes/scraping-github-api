@@ -3,46 +3,47 @@ package br.com.rickes.scraping.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import br.com.rickes.scraping.model.Address;
 import br.com.rickes.scraping.model.Archive;
-import br.com.rickes.scraping.repository.AddressRepository;
 import br.com.rickes.scraping.repository.ArchiveRepository;
 import br.com.rickes.scraping.tools.HtmlTool;
 
-public class scrapingGitHubService {
+@Service
+public class ScrapingGitHubService {
     
     private final String URL_GIT = "https://github.com";
 
+    private String urlParam;
 
     @Autowired
-    AddressRepository addressRepository;
-
-    @Autowired
-    ArchiveRepository archiveRepository;
+    private ArchiveRepository archiveRepository;
 
     private List<Archive> archives = new ArrayList<>();
+    HtmlTool htmlTool;
 
-    private Address address = new Address();
-
-    public void getAllArchives(String pUrl){
-        Optional<Address> addressDB = addressRepository.findByUrl(pUrl);
-        
-        List<Archive> listArchives = archiveRepository.findByAddress(addressDB.get());
+    public Map<String, List<Archive>> getAllArchives(String pUrl){       
+        this.urlParam = pUrl;
+        List<Archive> listArchives = archiveRepository.findByUrl(pUrl);
 
         if(listArchives != null && !listArchives.isEmpty()){
-            //return arquivosConvertidos
+            this.archives = listArchives;
         }else{
             this.searchAllArchives(pUrl);
+            this.archiveRepository.saveAll(archives);
         }
+
+        Map<String, List<Archive>> mapGroupExtension = this.archives.stream().collect(Collectors.groupingBy(Archive::getExtension));
+
+        return mapGroupExtension;
     }
 
 
     protected void searchAllArchives(String pUrl){
-        HtmlTool htmlTool;
         
         try {
             htmlTool = new HtmlTool();
@@ -52,11 +53,11 @@ public class scrapingGitHubService {
 			ArrayList<String> links = (ArrayList<String>) htmlTool.getUrlPage(bodyHTML);
 			
 			if(links == null || links.isEmpty()) {
-				saveArchive(pUrl, bodyHTML);
+				saveArchive(bodyHTML);
 			}else {
 				for (String link : links) {
 					System.out.println(link);
-					this.getAllArchives(URL_GIT+link);
+					this.searchAllArchives(URL_GIT+link);
 				}
 			}
 			
@@ -69,32 +70,19 @@ public class scrapingGitHubService {
         }
     }
 
-    protected void saveArchive(String pUrl, String pBodyHTML)
+    protected void saveArchive(String pBodyHTML)
     {
-        Address address = new Address();
-        address.setUrl(pUrl);
+        htmlTool = new HtmlTool();
+        Archive archive = new Archive();
 
-        Archive
+        archive.setUrl(this.urlParam);
+        archive.setLines(htmlTool.getLinesFile(pBodyHTML));
+        archive.setSize(htmlTool.getSizeFile(pBodyHTML));
+        archive.setName(htmlTool.getNameFile(pBodyHTML));
+        archive.setExtension(htmlTool.getExtensionFile(archive.getName()));
 
-
-
+        this.archives.add(archive);
+        //this.archiveRepository.save(archive);
     }
-    
-
-
-    protected String convertJson(List<Archive> pListArchives){
-
-        return null;
-    }
-
-
-    
-
-
-
-
-
-
-
 
 }

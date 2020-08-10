@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class HtmlTool {
     
 	private final String PATTERN_TAG_URL = "(<\\s*a class=\"js-navigation-open link-gray-dark\"[^>]*>(.*?))";
@@ -59,7 +62,7 @@ public class HtmlTool {
 	}
 
 	
-	public String linesFile(String html) {
+	public String getLinesFile(String html) {
 		String countLines = "";
 		
 		Pattern p = Pattern.compile(PATTERN_SIZE_LINE);
@@ -80,7 +83,7 @@ public class HtmlTool {
 
 	}
 	
-	public String sizeFile(String html) {
+	public String getSizeFile(String html) {
 		String size = "";
 		String tag = "";
 		
@@ -127,8 +130,7 @@ public class HtmlTool {
         return file;
         
 	}
-	
-	
+
 	public String getExtensionFile(String file) {
 		String extension = "";
 		Matcher m = Pattern.compile(PATTERN_EXT_FILE).matcher(file);
@@ -140,9 +142,5 @@ public class HtmlTool {
         return extension;
 		
 	}
-
-
-
-
 
 }
