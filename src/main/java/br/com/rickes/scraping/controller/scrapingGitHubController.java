@@ -11,13 +11,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.rickes.scraping.model.Archive;
-import br.com.rickes.scraping.repository.ArchiveRepository;
 import br.com.rickes.scraping.service.ScrapingGitHubService;
 
 
 @RestController
 @RequestMapping(value = "/api")
-public class scrapingGitHubController {
+public class ScrapingGitHubController {
 
     @Autowired
     ScrapingGitHubService scrapingService;
