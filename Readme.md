@@ -1,4 +1,4 @@
-#### Repository scraping-github-api
+### Repository scraping-github-api
 
 API for scraping data from GitHub. This API will return, from a valid URL, data from all files in the repository, grouped by extension.
 
@@ -8,6 +8,6 @@ Local build requirements:
 - Maven;
 - Java 11;
 
-###### Heroku
+#### Heroku
 To use Heroku, the url of the desired repository must be passed by parameter. Ex.:
 
