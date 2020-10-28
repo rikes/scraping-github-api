@@ -14,9 +14,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class HtmlTool {
-    
+	
+	//Procura as url no corpo atraves da tag html
 	private final String PATTERN_TAG_URL = "(<\\s*a class=\"js-navigation-open link-gray-dark\"[^>]*>(.*?))";
+	
+	//utilizado para encontrar as url da tag anterior
 	private final String PATTERN_URL = "([^\\s=]+)=(?:\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|(\\S+))";
+	
+	//encontra a tag html que possui os campos desejados
 	private final String PATTERN_NAME_FILE = "(?si)<strong class=\"final-path[^>]+?>(.*?)<\\/strong>";
 	private final String PATTERN_EXT_FILE = "(?<=\\.)[^.]+$";
 	private final String PATTERN_SIZE_LINE = "(?si)<div class=\"text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0[^>]+?>(.*?)<\\/div>";
@@ -26,6 +31,7 @@ public class HtmlTool {
 	private final String KB = "KB";
 	private final String MB = "MB";
 	
+	//Download do corpo da mensagem arquivo html
 	public String getBodyPage(String url) throws IOException, InterruptedException {
 	        
 		HttpClient client = HttpClient.newHttpClient();
@@ -50,7 +56,7 @@ public class HtmlTool {
 	        Matcher m = p.matcher(m1.group(0));
         	
 	        while(m.find()) {
-	            
+	            //Encontrar a tag href, salva o link dela
 	        	if(m.group(1).equals("href")) {
 		        	matchUrl.add(m.group(2));
 	            }
@@ -61,7 +67,7 @@ public class HtmlTool {
         return matchUrl;
 	}
 
-	
+	//Busco os numeros seguidos da palavra = 'Lines'
 	public String getLinesFile(String html) {
 		String countLines = "";
 		
@@ -78,7 +84,7 @@ public class HtmlTool {
 	        }
         }
         
-                     
+           
         return countLines.replaceAll("[^0-9]", "") == "" ? "0" : countLines;
 
 	}

@@ -22,11 +22,12 @@ public class ScrapingGitHubService {
 
     @Autowired
     private ArchiveRepository archiveRepository;
-
-    private List<Archive> archives = new ArrayList<>();
+    
+    private List<Archive> archives;
     HtmlTool htmlTool;
 
     public Map<String, List<Archive>> getAllArchives(String pUrl){       
+        this.archives = new ArrayList<>();
         this.urlParam = pUrl;
         List<Archive> listArchives = archiveRepository.findByUrl(pUrl);
 
@@ -42,18 +43,18 @@ public class ScrapingGitHubService {
         return mapGroupExtension;
     }
 
-
+    
     protected void searchAllArchives(String pUrl){
         
         try {
             htmlTool = new HtmlTool();
             
             String bodyHTML = htmlTool.getBodyPage(pUrl);
-			
+            
 			ArrayList<String> links = (ArrayList<String>) htmlTool.getUrlPage(bodyHTML);
-			
+
 			if(links == null || links.isEmpty()) {
-				saveArchive(bodyHTML);
+                saveArchive(bodyHTML);
 			}else {
 				for (String link : links) {
 					System.out.println(link);
