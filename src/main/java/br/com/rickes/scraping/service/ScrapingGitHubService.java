@@ -32,12 +32,6 @@ public class ScrapingGitHubService implements IScrapingGitHub {
     private List<Archive> archives;
     private IHtmlTools htmlTool;
     private List<String> links;
-    
-
-    public ScrapingGitHubService() {
-    	this.archives = new ArrayList<>();
-        this.htmlTool = new HtmlToolGitHub();
-	}
 
     /**Method responsible for scraping on GitHub, 
      * searching for data by scanning pages or in the database
@@ -46,7 +40,9 @@ public class ScrapingGitHubService implements IScrapingGitHub {
      * @return Grouping of data by name, length, lines and size
      */
 	public Map<String, List<Archive>> getAllArchives(String pUrl){       
-       
+		this.archives = new ArrayList<>();
+        this.htmlTool = new HtmlToolGitHub();
+        
         this.urlParam = pUrl;
         List<Archive> listArchives = archiveRepository.findByUrl(pUrl);
 

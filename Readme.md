@@ -32,6 +32,9 @@ docker-compose up
 The previous command will download all necessary dependencies that do not exist on your machine. At the end of the command, the application will be available on port 8080 and the database on 5432.
 
 Example:
+
 http://127.0.0.1:8080/api/files?url=https://github.com/rikes/scraping-github-api
 
+Docker hub:
 
+https://hub.docker.com/r/rickes/scraping-spring-postgres
