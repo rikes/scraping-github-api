@@ -11,10 +11,16 @@ import org.springframework.stereotype.Service;
 
 import br.com.rickes.scraping.model.Archive;
 import br.com.rickes.scraping.repository.ArchiveRepository;
-import br.com.rickes.scraping.tools.HtmlTool;
+import br.com.rickes.scraping.tools.HtmlToolGitHub;
+import br.com.rickes.scraping.tools.IHtmlTools;
 
+/**
+ * Class of service responsible for implementing business rules when scraping from GitHub
+ * 
+ * @author Henrique
+ */
 @Service
-public class ScrapingGitHubService {
+public class ScrapingGitHubService implements IScrapingGitHub {
     
     private final String URL_GIT = "https://github.com";
 
@@ -24,10 +30,23 @@ public class ScrapingGitHubService {
     private ArchiveRepository archiveRepository;
     
     private List<Archive> archives;
-    HtmlTool htmlTool;
+    private IHtmlTools htmlTool;
+    private List<String> links;
+    
 
-    public Map<String, List<Archive>> getAllArchives(String pUrl){       
-        this.archives = new ArrayList<>();
+    public ScrapingGitHubService() {
+    	this.archives = new ArrayList<>();
+        this.htmlTool = new HtmlToolGitHub();
+	}
+
+    /**Method responsible for scraping on GitHub, 
+     * searching for data by scanning pages or in the database
+     * 
+     * @param pUrl Search html body in URL
+     * @return Grouping of data by name, length, lines and size
+     */
+	public Map<String, List<Archive>> getAllArchives(String pUrl){       
+       
         this.urlParam = pUrl;
         List<Archive> listArchives = archiveRepository.findByUrl(pUrl);
 
@@ -44,20 +63,22 @@ public class ScrapingGitHubService {
     }
 
     
+    /**Recursive method that scans pages
+     * 
+     * @param pUrl Page URL
+     */
     protected void searchAllArchives(String pUrl){
         
         try {
-            htmlTool = new HtmlTool();
             
             String bodyHTML = htmlTool.getBodyPage(pUrl);
             
-			ArrayList<String> links = (ArrayList<String>) htmlTool.getUrlPage(bodyHTML);
+			links = htmlTool.getUrlPage(bodyHTML);
 
 			if(links == null || links.isEmpty()) {
-                saveArchive(bodyHTML);
+                saveArchive(bodyHTML, pUrl);
 			}else {
 				for (String link : links) {
-					System.out.println(link);
 					this.searchAllArchives(URL_GIT+link);
 				}
 			}
@@ -70,20 +91,24 @@ public class ScrapingGitHubService {
             e.printStackTrace();
         }
     }
-
-    protected void saveArchive(String pBodyHTML)
+    
+    
+    /**Build an 'Archive' object and add it to the list
+     * 
+     * @param pUrl Page URL
+     * @param pBodyHTML HTML body with file data (Size and lines)
+     */
+    protected void saveArchive(String pBodyHTML, String pUrl)
     {
-        htmlTool = new HtmlTool();
         Archive archive = new Archive();
 
         archive.setUrl(this.urlParam);
-        archive.setLines(htmlTool.getLinesFile(pBodyHTML));
-        archive.setSize(htmlTool.getSizeFile(pBodyHTML));
-        archive.setName(htmlTool.getNameFile(pBodyHTML));
-        archive.setExtension(htmlTool.getExtensionFile(archive.getName()));
+        archive.setLines(this.htmlTool.getLinesFile(pBodyHTML));
+        archive.setSize(this.htmlTool.getSizeFile(pBodyHTML));
+        archive.setName(this.htmlTool.getNameFile(pUrl));
+        archive.setExtension(this.htmlTool.getExtensionFile(archive.getName()));
 
         this.archives.add(archive);
-        //this.archiveRepository.save(archive);
     }
 
 }

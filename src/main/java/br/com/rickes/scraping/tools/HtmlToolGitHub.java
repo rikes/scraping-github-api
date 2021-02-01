@@ -12,17 +12,19 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 
+/**
+ * Class responsible for implementing the necessary resources to examine the GitHub page
+ * 
+ * @author Henrique
+ */
 @Service
-public class HtmlTool {
+public class HtmlToolGitHub implements IHtmlTools{
 	
-	//Procura as url no corpo atraves da tag html
 	private final String PATTERN_TAG_URL = "(<\\s*a class=\"js-navigation-open link-gray-dark\"[^>]*>(.*?))";
 	
-	//utilizado para encontrar as url da tag anterior
 	private final String PATTERN_URL = "([^\\s=]+)=(?:\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|(\\S+))";
 	
-	//encontra a tag html que possui os campos desejados
-	private final String PATTERN_NAME_FILE = "(?si)<strong class=\"final-path[^>]+?>(.*?)<\\/strong>";
+	private final String PATTERN_NAME_FILE = "[^\\/]+$";
 	private final String PATTERN_EXT_FILE = "(?<=\\.)[^.]+$";
 	private final String PATTERN_SIZE_LINE = "(?si)<div class=\"text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0[^>]+?>(.*?)<\\/div>";
 	private final String PATTERN_NUMBER = "[1-9][.0-9]* ";
@@ -30,21 +32,38 @@ public class HtmlTool {
 	private final String BYTES = "Bytes";
 	private final String KB = "KB";
 	private final String MB = "MB";
-	
-	//Download do corpo da mensagem arquivo html
-	public String getBodyPage(String url) throws IOException, InterruptedException {
-	        
-		HttpClient client = HttpClient.newHttpClient();
+	HttpClient client;
+	List<String> matchUrl;
 
+	public HtmlToolGitHub() {
+		this.client = HttpClient.newHttpClient();
+	}
+
+	/**
+	 * Search the body of a link
+	 * 
+	 * @param url Search link
+	 * @return HTML Body
+	 * 
+	 */
+	public String getBodyPage(String url) throws IOException, InterruptedException {
+		
 		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).build();
 
 		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
+			
 		return response.body();
+		
 	}
-	
+	/**
+	 * Search all links on the page using pre-defined patterns with regex
+	 * 
+	 * @param html HTML Body
+	 * @return List of links found
+	 * 
+	 */
 	public List<String> getUrlPage(String html){
-		List<String> matchUrl = new ArrayList<>();
+		matchUrl = new ArrayList<>();
 		
 		Pattern p1 = Pattern.compile(PATTERN_TAG_URL);
         Matcher m1 = p1.matcher(html);	        
@@ -56,7 +75,7 @@ public class HtmlTool {
 	        Matcher m = p.matcher(m1.group(0));
         	
 	        while(m.find()) {
-	            //Encontrar a tag href, salva o link dela
+	            //Find the href tag, to get the link
 	        	if(m.group(1).equals("href")) {
 		        	matchUrl.add(m.group(2));
 	            }
@@ -67,9 +86,14 @@ public class HtmlTool {
         return matchUrl;
 	}
 
-	//Busco os numeros seguidos da palavra = 'Lines'
+	/**
+	 * Search numbers near 'Lines'
+	 * 
+	 * @param html Page Body
+	 * @Return Number of lines
+	 */
 	public String getLinesFile(String html) {
-		String countLines = "";
+		StringBuilder countLines = new StringBuilder();
 		
 		Pattern p = Pattern.compile(PATTERN_SIZE_LINE);
         Matcher m = p.matcher(html);
@@ -80,18 +104,24 @@ public class HtmlTool {
 	        Matcher m1 = p1.matcher(m.group(1));
 	        
 	        while(m1.find()) {
-	        	countLines = m1.group(0);
+	        	countLines.append(m1.group(0));
 	        }
         }
         
            
-        return countLines.replaceAll("[^0-9]", "") == "" ? "0" : countLines;
+        return countLines.toString().replaceAll("[^0-9]", "").equals("") ? "0" : countLines.toString();
 
 	}
 	
+	/**
+	 * Search the file size, using keywords of size (bytes, KB, MB)
+	 * 
+	 * @param html Page Body
+	 * @Return File size
+	 */
 	public String getSizeFile(String html) {
-		String size = "";
-		String tag = "";
+		StringBuilder size = new StringBuilder();
+		StringBuilder tag = new StringBuilder();
 		
 		Pattern p = Pattern.compile(PATTERN_SIZE_LINE);
 		Pattern pBytes = Pattern.compile(PATTERN_NUMBER + BYTES);
@@ -101,7 +131,7 @@ public class HtmlTool {
         Matcher m = p.matcher(html);
         
         while(m.find()) {
-        	tag = m.group(1);
+        	tag.append(m.group(1));
         }
         
         Matcher mBytes = pBytes.matcher(tag);
@@ -109,43 +139,56 @@ public class HtmlTool {
    	 	Matcher mMB = pMB.matcher(tag);
         
         while(mBytes.find()) {
-            	size = mBytes.group(0); 
+            	size.append(mBytes.group(0)); 
         }
         while(mKB.find()) {
-            	size = mKB.group(0); 
+        	size.append(mKB.group(0)); 
         }
         
         while(mMB.find()) {
-            	size = mMB.group(0); 
+        	size.append(mMB.group(0)); 
         }
         
-        return size;
+        return size.toString();
 	}
 	
 	
-	public String getNameFile (String html) {
-		String file = "";
+	/**
+	 * Search for the file name using the URL
+	 * 
+	 * @param url Page URL
+	 * @Return File name
+	 */
+	public String getNameFile (String url) {
+		StringBuilder file = new StringBuilder();
 		
 		Pattern p = Pattern.compile(PATTERN_NAME_FILE);
-        Matcher m = p.matcher(html);
+        Matcher m = p.matcher(url);
         
         while(m.find()) {
-        	file = m.group(1);
+        	file.append(m.group(0));
         }
         
-        return file;
+        return file.toString();
         
 	}
 
+	/**
+	 * Search the file's exterior using its name
+	 * 
+	 * @param file File name
+	 * @Return File extension
+	 */
 	public String getExtensionFile(String file) {
-		String extension = "";
+		StringBuilder extension = new StringBuilder();
+		
 		Matcher m = Pattern.compile(PATTERN_EXT_FILE).matcher(file);
 		
         while(m.find()) {
-        	extension = m.group(0);
+        	extension.append(m.group(0));
         }
 		
-        return extension;
+        return extension.toString();
 		
 	}
 
